@@ -1,0 +1,3 @@
+# pyrite
+
+Simplified server interface.
