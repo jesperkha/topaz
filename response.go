@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"os"
 )
 
 var (
@@ -13,6 +14,10 @@ var (
 type response struct {
 	response http.ResponseWriter
 	status   int
+}
+
+func (r *response) Write(c []byte) {
+
 }
 
 func (r *response) JSON(content any) error {
@@ -29,6 +34,11 @@ func (r *response) JSON(content any) error {
 func (r *response) Status(status int) {
 	r.response.WriteHeader(status)
 	r.status = status
+}
+
+func (r *response) File(file *os.File) error {
+
+	return nil
 }
 
 func (r *response) Response() http.ResponseWriter {

@@ -1,6 +1,9 @@
 package topaz
 
-import "net/http"
+import (
+	"net/http"
+	"os"
+)
 
 // https://expressjs.com/en/4x/api.html
 
@@ -24,6 +27,9 @@ type Request interface {
 }
 
 type Response interface {
+	// Writes bytes to response writer.
+	Write(c []byte)
+
 	// Responds to request with content as json data. Returns error if the
 	// marshal failed, sends a server error status if so.
 	JSON(content any) error
@@ -31,6 +37,9 @@ type Response interface {
 	// Responds to request with a given status. Status 200 is automatically
 	// applied if the handler function does not fail.
 	Status(status int)
+
+	// Responds to request with a file.
+	File(file *os.File) error
 
 	// Get the underlying http response object
 	Response() http.ResponseWriter

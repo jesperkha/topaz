@@ -1,6 +1,7 @@
 package topaz
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 )
@@ -71,14 +72,8 @@ func getRootPath(url string) string {
 }
 
 func (s *server) Get(path string, handlerFunc Handler) {
-	// Todo: check if GET request
 	params := getUrlParams(path)
 	httpHandler := func(w http.ResponseWriter, r *http.Request) {
-		// Todo: match split path and replace variable params with '-'
-		if getUrlParams(r.URL.Path).identifier != params.identifier {
-			return
-		}
-
 		// Todo: make coupled function for creating req and res
 		res := response{response: w}
 		req := request{
@@ -87,10 +82,16 @@ func (s *server) Get(path string, handlerFunc Handler) {
 			query:   map[string]string{},
 		}
 
-		split := strings.Split(r.URL.Path, "/")[1:]
+		urlSplit := strings.Split(r.URL.Path[1:], "/")
 		for _, param := range params.parameters {
 			// Index cannot be out of range if identifiers match in length
-			req.query[param.name] = split[param.index]
+			req.query[param.name] = urlSplit[param.index]
+			urlSplit[param.index] = "-"
+		}
+
+		// Non-matching url identifier patterns
+		if fmt.Sprintf("/%s", strings.Join(urlSplit, "/")) != params.identifier {
+			return
 		}
 
 		handlerFunc(&req, &res)
