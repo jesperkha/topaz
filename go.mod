@@ -1,3 +1,3 @@
-module github.com/jesperkha/topaz5~
+module github.com/jesperkha/topaz
 
 go 1.18

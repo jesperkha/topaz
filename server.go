@@ -1,18 +1,18 @@
 package topaz
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 )
 
 type server struct {
-	listeners []string
+	// Todo: add testmode
+	listeners map[string]http.HandlerFunc
 	closed    bool
 }
 
 func NewServer() Server {
-	return &server{}
+	return &server{listeners: map[string]http.HandlerFunc{}}
 }
 
 type urlParams struct {
@@ -71,18 +71,15 @@ func getRootPath(url string) string {
 }
 
 func (s *server) Get(path string, handlerFunc Handler) {
+	// Todo: check if GET request
 	params := getUrlParams(path)
-	http.HandleFunc(getRootPath(path), func(w http.ResponseWriter, r *http.Request) {
-		// Debug
-		fmt.Println()
-		fmt.Println(getUrlParams(r.URL.Path).identifier)
-		fmt.Println(params.identifier)
-
+	httpHandler := func(w http.ResponseWriter, r *http.Request) {
 		// Todo: match split path and replace variable params with '-'
 		if getUrlParams(r.URL.Path).identifier != params.identifier {
 			return
 		}
 
+		// Todo: make coupled function for creating req and res
 		res := response{response: w}
 		req := request{
 			request: r,
@@ -100,7 +97,10 @@ func (s *server) Get(path string, handlerFunc Handler) {
 		if res.status == 0 {
 			w.WriteHeader(http.StatusOK)
 		}
-	})
+	}
+
+	s.listeners[path] = httpHandler // For testing of dummy requests
+	http.HandleFunc(getRootPath(path), httpHandler)
 }
 
 func (s *server) Post(path string, handlerFunc Handler) {
