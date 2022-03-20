@@ -18,7 +18,7 @@ type request struct {
 	params  map[string]string
 }
 
-func (r *request) JSON(dest interface{}) error {
+func (r *request) JSON(dest any) error {
 	reader := bufio.NewReader(r.request.Body)
 	data := make([]byte, reader.Size())
 	reader.Read(data)

@@ -15,7 +15,7 @@ type response struct {
 	status   int
 }
 
-func (r *response) JSON(content interface{}) error {
+func (r *response) JSON(content any) error {
 	payload, err := json.Marshal(content)
 	if err != nil {
 		return errJsonMarshalFail

@@ -6,7 +6,7 @@ import "net/http"
 
 type Request interface {
 	// Tries to unmarshal incoming data as json into obj.
-	JSON(dest interface{}) error
+	JSON(dest any) error
 
 	// Returns the full URL as a string
 	URL() string
@@ -26,7 +26,7 @@ type Request interface {
 type Response interface {
 	// Responds to request with content as json data. Returns error if the
 	// marshal failed, sends a server error status if so.
-	JSON(content interface{}) error
+	JSON(content any) error
 
 	// Responds to request with a given status. Status 200 is automatically
 	// applied if the handler function does not fail.
