@@ -34,20 +34,18 @@ func (r *request) URL() string {
 	return r.request.URL.Path
 }
 
-func (r *request) Query(param string) (value string, err error) {
+func (r *request) Query(param string) string {
 	if val, ok := r.query[param]; ok {
-		return val, err
+		return val
 	}
-
-	return value, errorf(errParamNotFound, param)
+	return ""
 }
 
-func (r *request) Param(param string) (value string, err error) {
+func (r *request) Param(param string) string {
 	if val, ok := r.query[param]; ok {
-		return val, err
+		return val
 	}
-
-	return value, errorf(errParamNotFound, param)
+	return ""
 }
 
 func (r *request) Request() *http.Request {

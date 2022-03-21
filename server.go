@@ -73,6 +73,8 @@ func getRootPath(url string) string {
 
 func (s *server) Get(path string, handlerFunc Handler) {
 	params := getUrlParams(path)
+
+	// Todo: handle cases for queries in url
 	httpHandler := func(w http.ResponseWriter, r *http.Request) {
 		// Todo: make coupled function for creating req and res
 		res := response{response: w}

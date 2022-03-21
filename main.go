@@ -14,13 +14,14 @@ type Request interface {
 	// Returns the full URL as a string
 	URL() string
 
-	// Gets the value of a URL query parameter if present, otherwise and error
-	// is returned.
-	Query(param string) (value string, err error)
+	// Gets the value of a URL query parameter if present, otherwise an empty
+	// string is returned.
+	Query(param string) string
 
 	// Gets the path parameters specified by the request handler path pattern.
 	// Example path: "users/:id". Here you can get an "id" value from the url.
-	Param(param string) (value string, err error)
+	// Returns an empty string if no param was found.
+	Param(param string) string
 
 	// Get the underlying http request object
 	Request() *http.Request
