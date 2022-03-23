@@ -2,7 +2,6 @@ package topaz
 
 import (
 	"net/http"
-	"os"
 )
 
 // https://expressjs.com/en/4x/api.html
@@ -40,7 +39,7 @@ type Response interface {
 	Status(status int)
 
 	// Responds to request with a file.
-	File(file *os.File) error
+	File(filename string) error
 
 	// Get the underlying http response object
 	Response() http.ResponseWriter

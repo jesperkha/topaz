@@ -7,13 +7,10 @@ import (
 )
 
 type server struct {
-	// Todo: add testmode
-	listeners map[string]http.HandlerFunc
-	closed    bool
 }
 
 func NewServer() Server {
-	return &server{listeners: map[string]http.HandlerFunc{}}
+	return &server{}
 }
 
 type urlParams struct {
@@ -55,29 +52,18 @@ func getUrlParams(url string) urlParams {
 	return params
 }
 
-// Returns leading path before any variable url parameters
-func getRootPath(url string) string {
-	split := strings.Split(url, "/")[1:]
-	root := ""
-	for _, s := range split {
-		if !strings.HasPrefix(s, ":") {
-			root += "/" + s
-		} else {
-			return root + "/"
-		}
-	}
-
-	// URL starts with a param name
-	return "/"
-}
-
-func (s *server) Get(path string, handlerFunc Handler) {
+func (s *server) handle(method string, path string, handlerFunc Handler) {
 	params := getUrlParams(path)
 
 	// Todo: handle cases for queries in url
 	httpHandler := func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != method {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
 		// Todo: make coupled function for creating req and res
-		res := response{response: w}
+		res := response{response: w, request: r}
 		req := request{
 			request: r,
 			params:  map[string]string{},
@@ -102,12 +88,29 @@ func (s *server) Get(path string, handlerFunc Handler) {
 		}
 	}
 
-	s.listeners[path] = httpHandler // For testing of dummy requests
-	http.HandleFunc(getRootPath(path), httpHandler)
+	// Get leading path before any variable url parameters
+	rootPath := "/"
+	if split := strings.Split(path, "/")[1:]; len(split) > 1 {
+		rootPath = ""
+		for _, s := range split {
+			if !strings.HasPrefix(s, ":") {
+				rootPath += "/" + s
+			} else {
+				rootPath += "/"
+				break
+			}
+		}
+	}
+
+	http.HandleFunc(rootPath, httpHandler)
+}
+
+func (s *server) Get(path string, handlerFunc Handler) {
+	s.handle(http.MethodGet, path, handlerFunc)
 }
 
 func (s *server) Post(path string, handlerFunc Handler) {
-
+	s.handle(http.MethodPost, path, handlerFunc)
 }
 
 func (s *server) Static(entryPoint string) error {
@@ -120,5 +123,4 @@ func (s *server) Listen(port string) error {
 }
 
 func (s *server) Close() {
-	s.closed = true
 }

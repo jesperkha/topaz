@@ -3,6 +3,7 @@ package test
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
 	"testing"
 
@@ -20,7 +21,7 @@ func TestAll(t *testing.T) {
 	server = topaz.NewServer()
 	server.Get("/users/:id", func(req topaz.Request, res topaz.Response) {
 		if req.Param("id") != "123" {
-			t.Errorf("expected id of 123, got %s", req.Param("id"))
+			t.Errorf("GET expected id of 123, got %s", req.Param("id"))
 		}
 		if err := res.JSON("{'hello': 'world'}"); err != nil {
 			t.Error(err)
@@ -39,11 +40,20 @@ func TestAll(t *testing.T) {
 		}
 	})
 
+	server.Get("/", func(req topaz.Request, res topaz.Response) {
+		err := res.File("test.txt")
+		if err != nil {
+			t.Error(err)
+		}
+	})
+
 	go server.Listen(":3000")
-	t.Run("GET request", TestGet)
+	t.Run("GET request", testGet)
+	t.Run("POST request", testPost)
+	t.Run("FILE request", testFile)
 }
 
-func TestGet(t *testing.T) {
+func testGet(t *testing.T) {
 	res, err := http.Get("http://localhost:3000/users/123")
 	if err != nil {
 		t.Error(err)
@@ -53,7 +63,7 @@ func TestGet(t *testing.T) {
 	}
 }
 
-func TestPost(t *testing.T) {
+func testPost(t *testing.T) {
 	data, err := json.Marshal(person{name: "name", address: "address"})
 	if err != nil {
 		t.Error(err)
@@ -64,5 +74,22 @@ func TestPost(t *testing.T) {
 	}
 	if res.StatusCode != 200 {
 		t.Errorf("POST got status %d", res.StatusCode)
+	}
+}
+
+func testFile(t *testing.T) {
+	res, err := http.Get("http://localhost:3000/")
+	if err != nil {
+		t.Error(err)
+	}
+	if res.StatusCode != 200 {
+		t.Errorf("FILE got status %d", res.StatusCode)
+	}
+	c, err := io.ReadAll(res.Body)
+	if err != nil {
+		t.Error(err)
+	}
+	if string(c) != "hello" {
+		t.Errorf("FILE expected 'hello', got %s", string(c))
 	}
 }

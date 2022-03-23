@@ -1,8 +1,8 @@
 <br />
 <div align="center">
   <img src=".github/topaz.png" alt="Logo" width="80">
-
-  <h3 align="center">Topaz</h3>
+  <br>
+  <img src=".github/title.svg" alt="Logo" width="80">
 
   <p align="center">
     Simplified HTTP server package. Lets you  set up<br> a web server in minimal time.

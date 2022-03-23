@@ -1,9 +1,9 @@
 package topaz
 
 import (
-	"bufio"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 )
 
@@ -19,14 +19,13 @@ type request struct {
 }
 
 func (r *request) JSON(dest any) error {
-	reader := bufio.NewReader(r.request.Body)
-	data := make([]byte, reader.Size())
-	reader.Read(data)
-
+	data, err := io.ReadAll(r.request.Body)
+	if err != nil {
+		return err
+	}
 	if err := json.Unmarshal(data, dest); err != nil {
 		return errJsonUnmarshalFail
 	}
-
 	return nil
 }
 
