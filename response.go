@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	errJsonMarshalFail = errors.New("topaz: failed to marshal json data")
+	errJsonMarshalFail = errors.New("failed to marshal json data")
 )
 
 type response struct {

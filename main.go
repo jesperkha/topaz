@@ -13,6 +13,9 @@ type Request interface {
 	// Returns the full URL as a string
 	URL() string
 
+	// Redirects the !request to the new path.
+	Redirect(path string)
+
 	// Gets the value of a URL query parameter if present, otherwise an empty
 	// string is returned.
 	Query(key string) string
@@ -59,15 +62,10 @@ type Server interface {
 	// params with the Request.PathParam() method.
 	Post(path string, handlerFunc Handler)
 
-	// Serves a static site from the entry point. Only serves files mentioned
-	// by the entry point and its references.
-	Static(entryPoint string) error
+	// Serves a static site from the directory.
+	Static(path string, dir string)
 
 	// Sets up server and listens to the port. Canceled by either closing the
 	// program or running Server.Close()
 	Listen(port string) error
-
-	// Stops server and gracefully ends all ongoing requests. Returns an error
-	// if it has already been called.
-	Close()
 }

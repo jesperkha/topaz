@@ -18,16 +18,12 @@ func (s *server) Post(path string, handlerFunc Handler) {
 	s.handle(http.MethodPost, path, handlerFunc)
 }
 
-func (s *server) Static(entryPoint string) error {
-
-	return nil
+func (s *server) Static(path string, dir string) {
+	http.Handle(path, http.FileServer(http.Dir(dir)))
 }
 
 func (s *server) Listen(port string) error {
 	return http.ListenAndServe(port, nil)
-}
-
-func (s *server) Close() {
 }
 
 type server struct {
@@ -46,6 +42,11 @@ type urlParams struct {
 type parameter struct {
 	name  string
 	index int
+}
+
+// Returns a split version of the raw URL path without a leading '/'
+func pathSplit(url string) []string {
+	return strings.Split(strings.Split(url, "?")[0], "/")[1:]
 }
 
 // Returns slice of paramter names in order
@@ -72,15 +73,12 @@ func getUrlParams(url string) urlParams {
 	return params
 }
 
-func pathSplit(url string) []string {
-	return strings.Split(strings.Split(url, "?")[0], "/")[1:]
-}
-
 func resreq(w http.ResponseWriter, r *http.Request) (res *response, req *request) {
 	return &response{response: w, request: r},
 		&request{
-			request: r,
-			params:  map[string]string{},
+			request:  r,
+			response: w,
+			params:   map[string]string{},
 		}
 }
 
@@ -107,7 +105,7 @@ func (s *server) handle(method string, path string, handlerFunc Handler) {
 		}
 
 		handlerFunc(req, res)
-		if res.status == 0 {
+		if !req.redirected && res.status == 0 {
 			w.WriteHeader(http.StatusOK)
 		}
 	}

@@ -8,13 +8,15 @@ import (
 )
 
 var (
-	errJsonUnmarshalFail = errors.New("topaz: failed to unmarshal json data")
-	errParamNotFound     = errors.New("topaz: could not find parameter '%s' in request")
+	errJsonUnmarshalFail = errors.New("failed to unmarshal json data")
+	errParamNotFound     = errors.New("could not find parameter '%s' in request")
 )
 
 type request struct {
-	request *http.Request
-	params  map[string]string
+	request    *http.Request
+	response   http.ResponseWriter
+	params     map[string]string
+	redirected bool
 }
 
 func (r *request) JSON(dest any) error {
@@ -30,6 +32,11 @@ func (r *request) JSON(dest any) error {
 
 func (r *request) URL() string {
 	return r.request.URL.Path
+}
+
+func (r *request) Redirect(path string) {
+	http.Redirect(r.response, r.request, path, http.StatusTemporaryRedirect)
+	r.redirected = true
 }
 
 func (r *request) Query(key string) string {
