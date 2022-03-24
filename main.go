@@ -15,7 +15,7 @@ type Request interface {
 
 	// Gets the value of a URL query parameter if present, otherwise an empty
 	// string is returned.
-	Query(param string) string
+	Query(key string) string
 
 	// Gets the path parameters specified by the request handler path pattern.
 	// Example path: "users/:id". Here you can get an "id" value from the url.
@@ -38,7 +38,7 @@ type Response interface {
 	// applied if the handler function does not fail.
 	Status(status int)
 
-	// Responds to request with a file.
+	// Responds to request with a file. Return error if file does not exist.
 	File(filename string) error
 
 	// Get the underlying http response object

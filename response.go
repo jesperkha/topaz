@@ -43,6 +43,7 @@ func (r *response) File(filename string) error {
 		return err
 	}
 	http.ServeFile(r.response, r.request, filename)
+	r.status = http.StatusOK
 	return nil
 }
 

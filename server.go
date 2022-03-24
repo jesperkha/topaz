@@ -6,11 +6,31 @@ import (
 	"strings"
 )
 
-type server struct {
-}
-
 func NewServer() Server {
 	return &server{}
+}
+
+func (s *server) Get(path string, handlerFunc Handler) {
+	s.handle(http.MethodGet, path, handlerFunc)
+}
+
+func (s *server) Post(path string, handlerFunc Handler) {
+	s.handle(http.MethodPost, path, handlerFunc)
+}
+
+func (s *server) Static(entryPoint string) error {
+
+	return nil
+}
+
+func (s *server) Listen(port string) error {
+	return http.ListenAndServe(port, nil)
+}
+
+func (s *server) Close() {
+}
+
+type server struct {
 }
 
 type urlParams struct {
@@ -30,7 +50,7 @@ type parameter struct {
 
 // Returns slice of paramter names in order
 func getUrlParams(url string) urlParams {
-	split := strings.Split(url, "/")[1:]
+	split := pathSplit(url)
 	params := urlParams{}
 
 	identifier := ""
@@ -52,28 +72,32 @@ func getUrlParams(url string) urlParams {
 	return params
 }
 
+func pathSplit(url string) []string {
+	return strings.Split(strings.Split(url, "?")[0], "/")[1:]
+}
+
+func resreq(w http.ResponseWriter, r *http.Request) (res *response, req *request) {
+	return &response{response: w, request: r},
+		&request{
+			request: r,
+			params:  map[string]string{},
+		}
+}
+
 func (s *server) handle(method string, path string, handlerFunc Handler) {
 	params := getUrlParams(path)
 
-	// Todo: handle cases for queries in url
 	httpHandler := func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != method {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
 
-		// Todo: make coupled function for creating req and res
-		res := response{response: w, request: r}
-		req := request{
-			request: r,
-			params:  map[string]string{},
-			query:   map[string]string{},
-		}
-
-		urlSplit := strings.Split(r.URL.Path[1:], "/")
+		res, req := resreq(w, r)
+		urlSplit := pathSplit(r.URL.Path)
 		for _, param := range params.parameters {
 			// Index cannot be out of range if identifiers match in length
-			req.query[param.name] = urlSplit[param.index]
+			req.params[param.name] = urlSplit[param.index]
 			urlSplit[param.index] = "-"
 		}
 
@@ -82,7 +106,7 @@ func (s *server) handle(method string, path string, handlerFunc Handler) {
 			return
 		}
 
-		handlerFunc(&req, &res)
+		handlerFunc(req, res)
 		if res.status == 0 {
 			w.WriteHeader(http.StatusOK)
 		}
@@ -90,7 +114,7 @@ func (s *server) handle(method string, path string, handlerFunc Handler) {
 
 	// Get leading path before any variable url parameters
 	rootPath := "/"
-	if split := strings.Split(path, "/")[1:]; len(split) > 1 {
+	if split := pathSplit(path); len(split) > 1 {
 		rootPath = ""
 		for _, s := range split {
 			if !strings.HasPrefix(s, ":") {
@@ -103,24 +127,4 @@ func (s *server) handle(method string, path string, handlerFunc Handler) {
 	}
 
 	http.HandleFunc(rootPath, httpHandler)
-}
-
-func (s *server) Get(path string, handlerFunc Handler) {
-	s.handle(http.MethodGet, path, handlerFunc)
-}
-
-func (s *server) Post(path string, handlerFunc Handler) {
-	s.handle(http.MethodPost, path, handlerFunc)
-}
-
-func (s *server) Static(entryPoint string) error {
-
-	return nil
-}
-
-func (s *server) Listen(port string) error {
-	return http.ListenAndServe(port, nil)
-}
-
-func (s *server) Close() {
 }

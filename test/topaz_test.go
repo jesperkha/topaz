@@ -10,6 +10,8 @@ import (
 	"github.com/jesperkha/topaz"
 )
 
+// Todo: fix this shit stain of a test file
+
 var server topaz.Server
 
 type person struct {
@@ -22,6 +24,9 @@ func TestAll(t *testing.T) {
 	server.Get("/users/:id", func(req topaz.Request, res topaz.Response) {
 		if req.Param("id") != "123" {
 			t.Errorf("GET expected id of 123, got %s", req.Param("id"))
+		}
+		if req.Query("name") != "john" {
+			t.Errorf("GET expected query to be 'john', got %s", req.Query("name"))
 		}
 		if err := res.JSON("{'hello': 'world'}"); err != nil {
 			t.Error(err)
@@ -54,7 +59,7 @@ func TestAll(t *testing.T) {
 }
 
 func testGet(t *testing.T) {
-	res, err := http.Get("http://localhost:3000/users/123")
+	res, err := http.Get("http://localhost:3000/users/123?name=john")
 	if err != nil {
 		t.Error(err)
 	}

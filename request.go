@@ -14,7 +14,6 @@ var (
 
 type request struct {
 	request *http.Request
-	query   map[string]string
 	params  map[string]string
 }
 
@@ -33,15 +32,12 @@ func (r *request) URL() string {
 	return r.request.URL.Path
 }
 
-func (r *request) Query(param string) string {
-	if val, ok := r.query[param]; ok {
-		return val
-	}
-	return ""
+func (r *request) Query(key string) string {
+	return r.request.URL.Query().Get(key)
 }
 
 func (r *request) Param(param string) string {
-	if val, ok := r.query[param]; ok {
+	if val, ok := r.params[param]; ok {
 		return val
 	}
 	return ""
