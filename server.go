@@ -1,12 +1,18 @@
 package topaz
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
 	"strings"
 )
 
+var (
+	errNoDirectory = errors.New("could not find file or directory '%s'")
+)
+
+// Todo: new instance of server mux for each topaz server
 func NewServer() Server {
 	return &server{}
 }
@@ -21,7 +27,7 @@ func (s *server) Post(path string, handlerFunc Handler) {
 
 func (s *server) Static(path string, dir string) error {
 	if _, err := os.Open(path); err != nil {
-		return err
+		return errorf(errNoDirectory, dir)
 	}
 	http.Handle(path, http.FileServer(http.Dir(dir)))
 	return nil

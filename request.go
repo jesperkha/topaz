@@ -9,7 +9,6 @@ import (
 
 var (
 	errJsonUnmarshalFail = errors.New("failed to unmarshal json data")
-	errParamNotFound     = errors.New("could not find parameter '%s' in request")
 )
 
 type request struct {
