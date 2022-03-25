@@ -15,7 +15,7 @@
 ## Installation
 
 ```console
-go get github.com/jesperkha/topaz
+$ go get github.com/jesperkha/topaz
 ```
 
 <br>
