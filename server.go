@@ -3,6 +3,7 @@ package topaz
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -18,8 +19,12 @@ func (s *server) Post(path string, handlerFunc Handler) {
 	s.handle(http.MethodPost, path, handlerFunc)
 }
 
-func (s *server) Static(path string, dir string) {
+func (s *server) Static(path string, dir string) error {
+	if _, err := os.Open(path); err != nil {
+		return err
+	}
 	http.Handle(path, http.FileServer(http.Dir(dir)))
+	return nil
 }
 
 func (s *server) Listen(port string) error {

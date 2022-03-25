@@ -4,16 +4,14 @@ import (
 	"net/http"
 )
 
-// https://expressjs.com/en/4x/api.html
-
-type Request interface {
+gtype Request interface {
 	// Tries to unmarshal incoming data as json into obj.
 	JSON(dest any) error
 
 	// Returns the full URL as a string
 	URL() string
 
-	// Redirects the !request to the new path.
+	// Redirects the request to the new path.
 	Redirect(path string)
 
 	// Gets the value of a URL query parameter if present, otherwise an empty
@@ -62,8 +60,8 @@ type Server interface {
 	// params with the Request.PathParam() method.
 	Post(path string, handlerFunc Handler)
 
-	// Serves a static site from the directory.
-	Static(path string, dir string)
+	// Serves a static site from the directory dir.
+	Static(path string, dir string) error
 
 	// Sets up server and listens to the port. Canceled by either closing the
 	// program or running Server.Close()
