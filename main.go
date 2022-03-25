@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-gtype Request interface {
+type Request interface {
 	// Tries to unmarshal incoming data as json into obj.
 	JSON(dest any) error
 

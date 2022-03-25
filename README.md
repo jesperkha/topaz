@@ -6,11 +6,6 @@
 
   <p align="center">
     Simplified HTTP server package. Lets you  set up<br> a web server in minimal time.
-    <br />
-    <br />
-    <a href="https://github.com/jesperkha/topaz/issues">Report Bug</a>
-    ·
-    <a href="#examples">Examples</a>
   </p>
 </div>
 
@@ -19,6 +14,40 @@
 
 ## Installation
 
+```console
+go get github.com/jesperkha/topaz
+```
+
 <br>
 
-## Examples
+## Example
+
+```go
+...
+
+type user struct {
+  id string
+}
+
+func main() {
+  server := topaz.NewServer()
+  // Serve a static directory
+  server.Static("/", "pages")
+
+  // On a GET request to for example /users/1234
+  server.Get("/users/:id", func(req topaz.Request, res topaz.Response) {
+    // Gets the id value from the URL
+    userId := req.Param("id")
+    newUser := user{id: userId}
+
+    // Send back data as JSON
+    if err := res.JSON(newUser); err != nil {
+      res.Status(500)
+    }
+
+    // If a status is not set 200 is assumed
+  })
+
+  server.Listen(":3000")
+}
+```
