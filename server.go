@@ -1,19 +1,43 @@
 package topaz
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 )
 
-type server struct {
-	// Todo: add testmode
-	listeners map[string]http.HandlerFunc
-	closed    bool
+var (
+	errNoDirectory = errors.New("could not find file or directory '%s'")
+)
+
+// Todo: new instance of server mux for each topaz server
+func NewServer() Server {
+	return &server{}
 }
 
-func NewServer() Server {
-	return &server{listeners: map[string]http.HandlerFunc{}}
+func (s *server) Get(path string, handlerFunc Handler) {
+	s.handle(http.MethodGet, path, handlerFunc)
+}
+
+func (s *server) Post(path string, handlerFunc Handler) {
+	s.handle(http.MethodPost, path, handlerFunc)
+}
+
+func (s *server) Static(path string, dir string) error {
+	if _, err := os.Open(path); err != nil {
+		return errorf(errNoDirectory, dir)
+	}
+	http.Handle(path, http.FileServer(http.Dir(dir)))
+	return nil
+}
+
+func (s *server) Listen(port string) error {
+	return http.ListenAndServe(port, nil)
+}
+
+type server struct {
 }
 
 type urlParams struct {
@@ -31,9 +55,14 @@ type parameter struct {
 	index int
 }
 
+// Returns a split version of the raw URL path without a leading '/'
+func pathSplit(url string) []string {
+	return strings.Split(strings.Split(url, "?")[0], "/")[1:]
+}
+
 // Returns slice of paramter names in order
 func getUrlParams(url string) urlParams {
-	split := strings.Split(url, "/")[1:]
+	split := pathSplit(url)
 	params := urlParams{}
 
 	identifier := ""
@@ -55,37 +84,29 @@ func getUrlParams(url string) urlParams {
 	return params
 }
 
-// Returns leading path before any variable url parameters
-func getRootPath(url string) string {
-	split := strings.Split(url, "/")[1:]
-	root := ""
-	for _, s := range split {
-		if !strings.HasPrefix(s, ":") {
-			root += "/" + s
-		} else {
-			return root + "/"
+func resreq(w http.ResponseWriter, r *http.Request) (res *response, req *request) {
+	return &response{response: w, request: r},
+		&request{
+			request:  r,
+			response: w,
+			params:   map[string]string{},
 		}
-	}
-
-	// URL starts with a param name
-	return "/"
 }
 
-func (s *server) Get(path string, handlerFunc Handler) {
+func (s *server) handle(method string, path string, handlerFunc Handler) {
 	params := getUrlParams(path)
+
 	httpHandler := func(w http.ResponseWriter, r *http.Request) {
-		// Todo: make coupled function for creating req and res
-		res := response{response: w}
-		req := request{
-			request: r,
-			params:  map[string]string{},
-			query:   map[string]string{},
+		if r.Method != method {
+			w.WriteHeader(http.StatusNotFound)
+			return
 		}
 
-		urlSplit := strings.Split(r.URL.Path[1:], "/")
+		res, req := resreq(w, r)
+		urlSplit := pathSplit(r.URL.Path)
 		for _, param := range params.parameters {
 			// Index cannot be out of range if identifiers match in length
-			req.query[param.name] = urlSplit[param.index]
+			req.params[param.name] = urlSplit[param.index]
 			urlSplit[param.index] = "-"
 		}
 
@@ -94,31 +115,27 @@ func (s *server) Get(path string, handlerFunc Handler) {
 			return
 		}
 
-		handlerFunc(&req, &res)
-		if res.status == 0 {
+		handlerFunc(req, res)
+		if !req.redirected && res.status == 0 {
 			w.WriteHeader(http.StatusOK)
 		}
 	}
 
-	s.listeners[path] = httpHandler // For testing of dummy requests
-	http.HandleFunc(getRootPath(path), httpHandler)
-}
+	// Get leading path before any variable url parameters
+	rootPath := "/"
+	if split := pathSplit(path); len(split) > 1 {
+		rootPath = ""
+		for _, s := range split {
+			if !strings.HasPrefix(s, ":") {
+				rootPath += "/" + s
+			} else {
+				rootPath += "/"
+				break
+			}
+		}
+	}
 
-func (s *server) Post(path string, handlerFunc Handler) {
-
-}
-
-func (s *server) Static(entryPoint string) error {
-
-	return nil
-}
-
-func (s *server) Listen(port string) error {
-	return http.ListenAndServe(port, nil)
-}
-
-func (s *server) Close() {
-	s.closed = true
+	http.HandleFunc(rootPath, httpHandler)
 }
 
 func (s *server) ServeFiles(path string, dir string) {

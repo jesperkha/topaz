@@ -8,16 +8,18 @@ import (
 )
 
 var (
-	errJsonMarshalFail = errors.New("topaz: failed to marshal json data")
+	errJsonMarshalFail = errors.New("failed to marshal json data")
 )
 
 type response struct {
 	response http.ResponseWriter
+	request  *http.Request
 	status   int
 }
 
 func (r *response) Write(c []byte) {
-
+	r.response.Write(c)
+	r.status = http.StatusOK
 }
 
 func (r *response) JSON(content any) error {
@@ -36,8 +38,12 @@ func (r *response) Status(status int) {
 	r.status = status
 }
 
-func (r *response) File(file *os.File) error {
-
+func (r *response) File(filename string) error {
+	if _, err := os.Open(filename); err != nil {
+		return err
+	}
+	http.ServeFile(r.response, r.request, filename)
+	r.status = http.StatusOK
 	return nil
 }
 

@@ -2,10 +2,7 @@ package topaz
 
 import (
 	"net/http"
-	"os"
 )
-
-// https://expressjs.com/en/4x/api.html
 
 type Request interface {
 	// Tries to unmarshal incoming data as json into obj.
@@ -14,13 +11,17 @@ type Request interface {
 	// Returns the full URL as a string
 	URL() string
 
-	// Gets the value of a URL query parameter if present, otherwise and error
-	// is returned.
-	Query(param string) (value string, err error)
+	// Redirects the request to the new path.
+	Redirect(path string)
+
+	// Gets the value of a URL query parameter if present, otherwise an empty
+	// string is returned.
+	Query(key string) string
 
 	// Gets the path parameters specified by the request handler path pattern.
 	// Example path: "users/:id". Here you can get an "id" value from the url.
-	Param(param string) (value string, err error)
+	// Returns an empty string if no param was found.
+	Param(param string) string
 
 	// Get the underlying http request object
 	Request() *http.Request
@@ -38,8 +39,8 @@ type Response interface {
 	// applied if the handler function does not fail.
 	Status(status int)
 
-	// Responds to request with a file.
-	File(file *os.File) error
+	// Responds to request with a file. Return error if file does not exist.
+	File(filename string) error
 
 	// Get the underlying http response object
 	Response() http.ResponseWriter
@@ -59,9 +60,8 @@ type Server interface {
 	// params with the Request.PathParam() method.
 	Post(path string, handlerFunc Handler)
 
-	// Serves a static site from the entry point. Only serves files mentioned
-	// by the entry point and its references.
-	Static(entryPoint string) error
+	// Serves a static site from the directory dir.
+	Static(path string, dir string) error
 
 	// Serves the file directory dir to the given path.
 	ServeFiles(path string, dir string)
@@ -69,8 +69,4 @@ type Server interface {
 	// Sets up server and listens to the port. Canceled by either closing the
 	// program or running Server.Close()
 	Listen(port string) error
-
-	// Stops server and gracefully ends all ongoing requests. Returns an error
-	// if it has already been called.
-	Close()
 }

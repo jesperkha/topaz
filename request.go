@@ -1,32 +1,31 @@
 package topaz
 
 import (
-	"bufio"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 )
 
 var (
-	errJsonUnmarshalFail = errors.New("topaz: failed to unmarshal json data")
-	errParamNotFound     = errors.New("topaz: could not find parameter '%s' in request")
+	errJsonUnmarshalFail = errors.New("failed to unmarshal json data")
 )
 
 type request struct {
-	request *http.Request
-	query   map[string]string
-	params  map[string]string
+	request    *http.Request
+	response   http.ResponseWriter
+	params     map[string]string
+	redirected bool
 }
 
 func (r *request) JSON(dest any) error {
-	reader := bufio.NewReader(r.request.Body)
-	data := make([]byte, reader.Size())
-	reader.Read(data)
-
+	data, err := io.ReadAll(r.request.Body)
+	if err != nil {
+		return err
+	}
 	if err := json.Unmarshal(data, dest); err != nil {
 		return errJsonUnmarshalFail
 	}
-
 	return nil
 }
 
@@ -34,20 +33,20 @@ func (r *request) URL() string {
 	return r.request.URL.Path
 }
 
-func (r *request) Query(param string) (value string, err error) {
-	if val, ok := r.query[param]; ok {
-		return val, err
-	}
-
-	return value, errorf(errParamNotFound, param)
+func (r *request) Redirect(path string) {
+	http.Redirect(r.response, r.request, path, http.StatusTemporaryRedirect)
+	r.redirected = true
 }
 
-func (r *request) Param(param string) (value string, err error) {
-	if val, ok := r.query[param]; ok {
-		return val, err
-	}
+func (r *request) Query(key string) string {
+	return r.request.URL.Query().Get(key)
+}
 
-	return value, errorf(errParamNotFound, param)
+func (r *request) Param(param string) string {
+	if val, ok := r.params[param]; ok {
+		return val
+	}
+	return ""
 }
 
 func (r *request) Request() *http.Request {
