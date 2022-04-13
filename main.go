@@ -63,8 +63,9 @@ type Server interface {
 	// Serves a static site from the directory dir.
 	Static(path string, dir string) error
 
-	// Serves the file directory dir to the given path.
-	ServeFiles(path string, dir string)
+	// Serves the file directory dir to the given path. Error is returned if
+	// the directory does not exist.
+	ServeFiles(path string, dir string) error
 
 	// Sets up server and listens to the port. Canceled by either closing the
 	// program or running Server.Close()

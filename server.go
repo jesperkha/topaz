@@ -26,10 +26,18 @@ func (s *server) Post(path string, handlerFunc Handler) {
 }
 
 func (s *server) Static(path string, dir string) error {
-	if _, err := os.Open(path); err != nil {
+	if _, err := os.Open(dir); err != nil {
 		return errorf(errNoDirectory, dir)
 	}
 	http.Handle(path, http.FileServer(http.Dir(dir)))
+	return nil
+}
+
+func (s *server) ServeFiles(path string, dir string) error {
+	if _, err := os.Open(dir); err != nil {
+		return errorf(errNoDirectory, dir)
+	}
+	http.Handle(path, http.StripPrefix(path, http.FileServer(http.Dir(dir))))
 	return nil
 }
 
@@ -136,8 +144,4 @@ func (s *server) handle(method string, path string, handlerFunc Handler) {
 	}
 
 	http.HandleFunc(rootPath, httpHandler)
-}
-
-func (s *server) ServeFiles(path string, dir string) {
-	http.Handle(path, http.StripPrefix(path, http.FileServer(http.Dir(dir))))
 }
