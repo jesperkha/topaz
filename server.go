@@ -120,3 +120,7 @@ func (s *server) Listen(port string) error {
 func (s *server) Close() {
 	s.closed = true
 }
+
+func (s *server) ServeFiles(path string, dir string) {
+	http.Handle(path, http.StripPrefix(path, http.FileServer(http.Dir(dir))))
+}

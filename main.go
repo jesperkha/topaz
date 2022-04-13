@@ -63,6 +63,9 @@ type Server interface {
 	// by the entry point and its references.
 	Static(entryPoint string) error
 
+	// Serves the file directory dir to the given path.
+	ServeFiles(path string, dir string)
+
 	// Sets up server and listens to the port. Canceled by either closing the
 	// program or running Server.Close()
 	Listen(port string) error
