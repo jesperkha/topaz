@@ -37,6 +37,7 @@ func (s *server) ServeFiles(path string, dir string) error {
 	if _, err := os.Open(dir); err != nil {
 		return errorf(errNoDirectory, dir)
 	}
+	path = strings.TrimSuffix(path, "/") + "/" // Make sure path ends with a single 
 	http.Handle(path, http.StripPrefix(path, http.FileServer(http.Dir(dir))))
 	return nil
 }
