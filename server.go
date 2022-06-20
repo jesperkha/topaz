@@ -12,9 +12,14 @@ var (
 	errNoDirectory = errors.New("could not find file or directory '%s'")
 )
 
-// Todo: new instance of server mux for each topaz server
+type server struct {
+	mux *http.ServeMux
+}
+
 func NewServer() Server {
-	return &server{}
+	return &server{
+		mux: http.NewServeMux(),
+	}
 }
 
 func (s *server) Get(path string, handlerFunc Handler) {
@@ -29,7 +34,7 @@ func (s *server) Static(path string, dir string) error {
 	if _, err := os.Open(dir); err != nil {
 		return errorf(errNoDirectory, dir)
 	}
-	http.Handle(path, http.FileServer(http.Dir(dir)))
+	s.mux.Handle(path, http.FileServer(http.Dir(dir)))
 	return nil
 }
 
@@ -37,16 +42,13 @@ func (s *server) ServeFiles(path string, dir string) error {
 	if _, err := os.Open(dir); err != nil {
 		return errorf(errNoDirectory, dir)
 	}
-	path = strings.TrimSuffix(path, "/") + "/" // Make sure path ends with a single 
-	http.Handle(path, http.StripPrefix(path, http.FileServer(http.Dir(dir))))
+	path = strings.TrimSuffix(path, "/") + "/" // Make sure path ends with a single
+	s.mux.Handle(path, http.StripPrefix(path, http.FileServer(http.Dir(dir))))
 	return nil
 }
 
 func (s *server) Listen(port string) error {
-	return http.ListenAndServe(port, nil)
-}
-
-type server struct {
+	return http.ListenAndServe(port, s.mux)
 }
 
 type urlParams struct {
@@ -69,7 +71,7 @@ func pathSplit(url string) []string {
 	return strings.Split(strings.Split(url, "?")[0], "/")[1:]
 }
 
-// Returns slice of paramter names in order
+// Returns slice of parameter names in order
 func getUrlParams(url string) urlParams {
 	split := pathSplit(url)
 	params := urlParams{}
@@ -125,7 +127,7 @@ func (s *server) handle(method string, path string, handlerFunc Handler) {
 		}
 
 		handlerFunc(req, res)
-		if !req.redirected && res.status == 0 {
+		if !req.redirected && !res.statusWritten {
 			w.WriteHeader(http.StatusOK)
 		}
 	}
@@ -144,5 +146,5 @@ func (s *server) handle(method string, path string, handlerFunc Handler) {
 		}
 	}
 
-	http.HandleFunc(rootPath, httpHandler)
+	s.mux.HandleFunc(rootPath, httpHandler)
 }

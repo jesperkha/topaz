@@ -46,28 +46,28 @@ type Response interface {
 	Response() http.ResponseWriter
 }
 
-// HTTP request handler function. Writes response data to response object.
+// HTTP request handler function.
 type Handler func(req Request, res Response)
 
 type Server interface {
 	// Creates a new handler for an endpoint accessed by a GET request. Path
-	// can be formatted according to pyrite url format standardds. Get the
+	// can be formatted according to topaz url format standardds. Get the
 	// params with the Request.PathParam() method.
-	Get(path string, handlerFunc Handler)
+	Get(path string, handler Handler)
 
 	// Creates a new handler for an endpoint accessed by a POST request. Path
-	// can be formatted according to pyrite url format standardds. Get the
-	// params with the Request.PathParam() method.
-	Post(path string, handlerFunc Handler)
+	// can be formatted according to topaz url format standards. Get the
+	// params with the Request.PathParam method.
+	Post(path string, handler Handler)
 
-	// Serves a static site from the directory dir.
+	// Serves a static site from the directory dir. Error is returned if
+	// the directory does not exist.
 	Static(path string, dir string) error
 
 	// Serves the file directory dir to the given path. Error is returned if
 	// the directory does not exist.
 	ServeFiles(path string, dir string) error
 
-	// Sets up server and listens to the port. Canceled by either closing the
-	// program or running Server.Close()
+	// Sets up server and listens to the port.
 	Listen(port string) error
 }

@@ -12,14 +12,14 @@ var (
 )
 
 type response struct {
-	response http.ResponseWriter
-	request  *http.Request
-	status   int
+	response      http.ResponseWriter
+	request       *http.Request
+	statusWritten bool
 }
 
 func (r *response) Write(c []byte) {
 	r.response.Write(c)
-	r.status = http.StatusOK
+	r.statusWritten = true
 }
 
 func (r *response) JSON(content any) error {
@@ -29,13 +29,13 @@ func (r *response) JSON(content any) error {
 	}
 
 	r.response.Write(payload)
-	r.status = http.StatusOK
+	r.statusWritten = true
 	return nil
 }
 
 func (r *response) Status(status int) {
 	r.response.WriteHeader(status)
-	r.status = status
+	r.statusWritten = true
 }
 
 func (r *response) File(filename string) error {
@@ -43,7 +43,7 @@ func (r *response) File(filename string) error {
 		return err
 	}
 	http.ServeFile(r.response, r.request, filename)
-	r.status = http.StatusOK
+	r.statusWritten = true
 	return nil
 }
 
