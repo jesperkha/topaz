@@ -31,11 +31,12 @@ type user struct {
 
 func main() {
   server := topaz.NewServer()
+
   // Serve a static directory
   server.Static("/", "pages")
 
-  // On a GET request to for example /users/1234
-  server.Get("/users/:id", func(req topaz.Request, res topaz.Response) {
+  // Example of a handler to create a new user json object with a given id
+  server.Get("/create/:id", func(req topaz.Request, res topaz.Response) {
     // Gets the id value from the URL
     userId := req.Param("id")
     newUser := user{id: userId}
@@ -48,6 +49,7 @@ func main() {
     // If a status is not set 200 is assumed
   })
 
-  server.Listen(":3000")
+  // Will serve to localhost:3000 unless the PORT env variable is set
+  server.Listen(server.EnvPort(":3000"))
 }
 ```

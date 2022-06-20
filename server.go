@@ -51,6 +51,13 @@ func (s *server) Listen(port string) error {
 	return http.ListenAndServe(port, s.mux)
 }
 
+func (s *server) EnvPort(port string) string {
+	if str := os.Getenv("PORT"); str != "" {
+		return str
+	}
+	return port
+}
+
 type urlParams struct {
 	parameters []parameter
 
